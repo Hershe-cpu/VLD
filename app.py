@@ -12,7 +12,8 @@ from experiments.free_fall import free_fall_simulation
 from experiments.ohms_law import ohms_law_simulation
 
 
-from experiments.projectile_pygame import run_projectile_animation
+import subprocess
+import sys
 
 # PAGE CONFIGURATION
 
@@ -321,34 +322,50 @@ if selected_experiment == "Projectile Motion":
             key="projectile_height"
         )
 
-    if st.button(
-        " Run Projectile Simulation",
-        key="projectile_run"
-    ):
+    with col1:
+        if st.button(
+            " Run Projectile Simulation",
+            key="projectile_run"
+        ):
 
-        fig, animation, results = projectile_simulation(
-            velocity,
-            angle,
-            gravity,
-            height
-        )
+            fig, animation, results = projectile_simulation(
+                velocity,
+                angle,
+                gravity,
+                height
+            )
 
-        st.session_state.simulation_data["projectile"] = {
-            "fig": fig,
-            "results": results,
-            "parameters": {
-                "Initial velocity": f"{velocity} m/s",
-                "Launch angle": f"{angle}°",
-                "Gravity": f"{gravity} m/s²",
-                "Initial height": f"{height} m"
+            st.session_state.simulation_data["projectile"] = {
+                "fig": fig,
+                "results": results,
+                "parameters": {
+                    "Initial velocity": f"{velocity} m/s",
+                    "Launch angle": f"{angle}°",
+                    "Gravity": f"{gravity} m/s²",
+                    "Initial height": f"{height} m"
+                }
             }
-        }
 
-        # New simulation = remove previous AI response
-        st.session_state.ai_feedback.pop(
-            "projectile",
-            None
-        )
+            # New simulation = remove previous AI response
+            st.session_state.ai_feedback.pop(
+                "projectile",
+                None
+            )
+  
+
+        if st.button(
+            "🎮 Launch Animation",
+            key="projectile_pygame"
+        ):
+
+            subprocess.Popen([
+                sys.executable,
+                "experiments/projectile_pygame.py",
+                str(velocity),
+                str(angle),
+                str(gravity),
+                str(height)
+            ])
 
     if "projectile" in st.session_state.simulation_data:
 

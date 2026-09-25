@@ -10,6 +10,10 @@ def run_projectile_animation(velocity, angle, gravity, height):
     WIDTH = 1000
     HEIGHT = 600
 
+    # Right-side information panel
+    PANEL_X = 760
+    PANEL_WIDTH = 220
+
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Projectile Motion - Virtual Lab")
 
@@ -46,7 +50,7 @@ def run_projectile_animation(velocity, angle, gravity, height):
     margin_left = 80
     margin_bottom = 80
 
-    usable_width = WIDTH - margin_left - 50
+    usable_width = PANEL_X - margin_left - 30
     usable_height = HEIGHT - margin_bottom - 50
 
     scale_x = usable_width / max(range_distance, 1)
@@ -68,6 +72,7 @@ def run_projectile_animation(velocity, angle, gravity, height):
     trajectory_points = []
 
     running = True
+    simulation_complete = False
 
     while running:
 
@@ -77,13 +82,32 @@ def run_projectile_animation(velocity, angle, gravity, height):
             if event.type == pygame.QUIT:
                 running = False
 
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+
+                if event.key == pygame.K_r:
+                    start_time = pygame.time.get_ticks()
+                    trajectory_points = []
+                    simulation_complete = False
+
         # Current time
         elapsed = (
             pygame.time.get_ticks() - start_time
         ) / 1000
 
         # Slow down animation slightly
-        t = min(elapsed * 0.8, flight_time)
+        if not simulation_complete:
+
+            t = min(elapsed * 0.8, flight_time)
+
+            if t >= flight_time:
+                t = flight_time
+                simulation_complete = True
+
+        else:
+            t = flight_time
 
         # Projectile position
         x = vx * t
@@ -137,6 +161,143 @@ def run_projectile_animation(velocity, angle, gravity, height):
                 (WIDTH, i),
                 1
             )
+        # Coordinate system
+        axis_x = margin_left
+        axis_y = ground_y
+
+        AXIS = (40, 40, 40)
+
+        # X-axis
+        pygame.draw.line(
+            screen,
+            AXIS,
+            (axis_x, axis_y),
+            (WIDTH - 30, axis_y),
+            3
+        )
+
+        # Y-axis
+        pygame.draw.line(
+            screen,
+            AXIS,
+            (axis_x, axis_y),
+            (axis_x, 40),
+            3
+        )
+
+        # X-axis arrow
+        pygame.draw.polygon(
+            screen,
+            AXIS,
+            [
+                (WIDTH - 20, axis_y),
+                (WIDTH - 35, axis_y - 7),
+                (WIDTH - 35, axis_y + 7)
+            ]
+        )
+
+        # Y-axis arrow
+        pygame.draw.polygon(
+            screen,
+            AXIS,
+            [
+                (axis_x, 30),
+                (axis_x - 7, 45),
+                (axis_x + 7, 45)
+            ]
+        )
+
+
+        # X-axis tick marks and labels
+
+        x_step = 5
+
+        for value in range(
+            0,
+            int(range_distance) + x_step,
+            x_step
+        ):
+
+            tick_x = axis_x + value * scale
+
+            if tick_x < WIDTH - 30:
+
+                pygame.draw.line(
+                    screen,
+                    AXIS,
+                    (tick_x, axis_y - 5),
+                    (tick_x, axis_y + 5),
+                    2
+                )
+
+                label = font.render(
+                    str(value),
+                    True,
+                    TEXT
+                )
+
+                screen.blit(
+                    label,
+                    (tick_x - 6, axis_y + 10)
+                )
+
+        # Y-axis tick marks and labels
+
+        y_step = 5
+
+        for value in range(
+            0,
+            int(max_height) + y_step,
+            y_step
+        ):
+
+            tick_y = axis_y - value * scale
+
+            if tick_y > 40:
+
+                pygame.draw.line(
+                    screen,
+                    AXIS,
+                    (axis_x - 5, tick_y),
+                    (axis_x + 5, tick_y),
+                    2
+                )
+
+                label = font.render(
+                    str(value),
+                    True,
+                    TEXT
+                )
+
+                screen.blit(
+                    label,
+                    (axis_x - 35, tick_y - 10)
+                )
+
+
+        # Axis labels
+
+        x_label = font.render(
+            "X (m)",
+            True,
+            TEXT
+        )
+
+        y_label = font.render(
+            "Y (m)",
+            True,
+            TEXT
+        )
+
+        screen.blit(
+            x_label,
+            (WIDTH - 80, axis_y + 35)
+        )
+
+        screen.blit(
+            y_label,
+            (axis_x - 45, 20)
+        )
 
         # Ground
         pygame.draw.line(
@@ -168,7 +329,7 @@ def run_projectile_animation(velocity, angle, gravity, height):
 
         # Title
         title = title_font.render(
-            "Projectile Motion",
+            "",
             True,
             TEXT
         )
@@ -179,13 +340,46 @@ def run_projectile_animation(velocity, angle, gravity, height):
         )
 
         # Information
+        
+        current_vx = vx
+        current_vy = vy - gravity * t
+
+        # Right-side information panel
+
+        
+
+        pygame.draw.rect(
+            screen,
+            SKY,
+            (PANEL_X, 0, PANEL_WIDTH, HEIGHT)
+        )
+
+        # Panel title
+        panel_title = title_font.render(
+            "Parameters",
+            True,
+            TEXT
+        )
+
+        screen.blit(
+            panel_title,
+            (PANEL_X + 15, 30)
+        )
+
+        # Information
         info = [
-            f"Velocity: {velocity:.1f} m/s",
-            f"Angle: {angle:.1f}°",
+            f"Initial Velocity: {velocity:.1f} m/s",
+            f"Launch Angle: {angle:.1f}°",
             f"Gravity: {gravity:.2f} m/s²",
+            "",
             f"Time: {t:.2f} s",
-            f"X: {x:.2f} m",
-            f"Y: {y:.2f} m",
+            
+            f"Vx: {current_vx:.2f} m/s",
+            f"Vy: {current_vy:.2f} m/s",
+            "",
+            f"Max Height: {max_height:.2f} m",
+            f"Range: {range_distance:.2f} m",
+            f"Flight Time: {flight_time:.2f} s",
         ]
 
         for i, text in enumerate(info):
@@ -198,43 +392,81 @@ def run_projectile_animation(velocity, angle, gravity, height):
 
             screen.blit(
                 rendered,
-                (30, 70 + i * 28)
+                (PANEL_X + 15, 65 + i * 25)
             )
 
-        # Velocity vector
+        # Instantaneous velocity vector
+        
         vector_length = 50
 
-        vector_x = (
-            math.cos(angle_rad)
-            * vector_length
+        speed_now = math.sqrt(
+            current_vx**2 + current_vy**2
         )
 
-        vector_y = (
-            -math.sin(angle_rad)
-            * vector_length
-        )
+        if speed_now > 0:
 
-        pygame.draw.line(
-            screen,
-            (0, 100, 0),
-            (screen_x, screen_y),
-            (
-                screen_x + vector_x,
-                screen_y + vector_y
-            ),
-            4
-        )
+            vector_x = (
+                current_vx / speed_now
+            ) * vector_length
+
+            vector_y = (
+                -current_vy / speed_now
+            ) * vector_length
+
+            pygame.draw.line(
+                screen,
+                (0, 100, 0),
+                (screen_x, screen_y),
+                (
+                    screen_x + vector_x,
+                    screen_y + vector_y
+                ),
+                4
+            )
+
+        if simulation_complete:
+        
+            complete_text = font.render(
+                "\n             Press R to Replay",
+                True,
+                TEXT
+            )
+
+            replay_text = font.render(
+                "",
+                True,
+                TEXT
+            )
+
+            screen.blit(
+                complete_text,
+                (PANEL_X + 15, HEIGHT - 60)
+            )
+
+            screen.blit(
+                replay_text,
+                (PANEL_X + 15, HEIGHT - 35)
+            )
 
         # Update screen
         pygame.display.flip()
 
         clock.tick(60)
 
-        # Finish animation
-        if elapsed >= flight_time + 1:
-
-            pygame.time.wait(1000)
-
-            running = False
 
     pygame.quit()
+
+
+if __name__ == "__main__":
+    import sys
+    velocity = float(sys.argv[1])
+    angle = float(sys.argv[2])
+    gravity = float(sys.argv[3])
+    height = float(sys.argv[4])
+    
+    run_projectile_animation(
+        velocity,
+        angle,
+        gravity,
+        height
+)

@@ -3,3 +3,5 @@ numpy
 matplotlib
 openai
 python-dotenv
+pygame-ce
+ollama
