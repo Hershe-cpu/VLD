@@ -1,15 +1,9 @@
 import ollama
 
-
 MODEL_NAME = "qwen3:4b"
 
 
-def ask_mentor(
-    experiment,
-    parameters,
-    student_hypothesis,
-    simulation_results
-):
+def ask_mentor(experiment, parameters, student_hypothesis, simulation_results):
 
     prompt = f"""
 You are an AI Physics Lab Mentor inside a virtual physics laboratory.
@@ -58,21 +52,13 @@ Ask one conceptual question to make the student think further.
 """
 
     try:
-
         response = ollama.chat(
-            model=MODEL_NAME,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            model=MODEL_NAME, messages=[{"role": "user", "content": prompt}]
         )
 
         return response["message"]["content"]
 
     except Exception as e:
-
         return (
             "⚠️ AI Mentor is unavailable.\n\n"
             f"Error: {e}\n\n"
